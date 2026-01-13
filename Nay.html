@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAY | Audio Architect / Official Terminal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400;700&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #050505;
+            color: #e5e5e5;
+            overflow-x: hidden;
+            cursor: crosshair; /* 精密な操作感を演出 */
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Glitch Effect for Title */
+        .glitch-wrapper {
+            position: relative;
+        }
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #050505;
+        }
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -2px 0 #7c3aed; /* Signal Purple */
+            clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+            animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -2px 0 #00ffff; /* Cyber Cyan */
+            clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+            80% { clip-path: inset(10% 0 70% 0); transform: translate(-1px, 1px); }
+            100% { clip-path: inset(30% 0 40% 0); transform: translate(1px, -1px); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -1px); }
+            20% { clip-path: inset(30% 0 20% 0); transform: translate(-2px, 2px); }
+            40% { clip-path: inset(70% 0 10% 0); transform: translate(2px, -2px); }
+            60% { clip-path: inset(20% 0 50% 0); transform: translate(-1px, 1px); }
+            80% { clip-path: inset(50% 0 30% 0); transform: translate(1px, -1px); }
+            100% { clip-path: inset(0% 0 90% 0); transform: translate(-2px, 1px); }
+        }
+
+        /* Scanline Effect */
+        .scanline {
+            width: 100%;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0),
+                rgba(255, 255, 255, 0) 50%,
+                rgba(0, 0, 0, 0.2) 50%,
+                rgba(0, 0, 0, 0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.15;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7c3aed; 
+        }
+
+        /* Utilities */
+        .border-gradient {
+            border-image: linear-gradient(to right, #7c3aed, #050505) 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <div class="scanline"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Icons (Inline SVGs to remove external dependency) ---
+        const IconBase = ({ children, size = 24, ...props }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                {...props}
+            >
+                {children}
+            </svg>
+        );
+
+        const Activity = (props) => <IconBase {...props}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></IconBase>;
+        const Disc = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></IconBase>;
+        const Cpu = (props) => <IconBase {...props}><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></IconBase>;
+        const Mic2 = (props) => <IconBase {...props}><path d="m12 8-9.04 9.06a2.82 2.82 0 1 0 3.98 3.98L16 12"/><circle cx="17" cy="7" r="5"/></IconBase>;
+        const ExternalLink = (props) => <IconBase {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></IconBase>;
+        const Terminal = (props) => <IconBase {...props}><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></IconBase>;
+        const Fingerprint = (props) => <IconBase {...props}><path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 6"/><path d="M5 15.887c2.477 2.625 5.765 2.805 7 2.113 1.235-.69 1.23-3.69-.174-4.225-1.405-.536-1.923 1.378-1.574 2.112.348.736 1.878 1.054 2.584.526.706-.528 1.838-2.613 1.336-3.873-.502-1.26-2.583-1.054-3.11-.845-1.393.553-1.63 2.505-1.347 3.655.283 1.15 1.595 1.83 2.94 1.32"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.871"/><path d="M22 12h-2"/><path d="M17 12h-2"/><path d="M12 7h-2"/><path d="M7 12H5"/></IconBase>;
+        const Zap = (props) => <IconBase {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></IconBase>;
+        const Speaker = (props) => <IconBase {...props}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><circle cx="12" cy="14" r="4"/><line x1="12" y1="6" x2="12.01" y2="6"/></IconBase>;
+        const Layers = (props) => <IconBase {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></IconBase>;
+        const ArrowRight = (props) => <IconBase {...props}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></IconBase>;
+        const Database = (props) => <IconBase {...props}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>;
+
+        // --- Data Definitions ---
+
+        const discography = [
+            {
+                id: "LOG_001",
+                title: "えんぐれーびんぐ",
+                genre: "Distorted Electro Swing",
+                bpm: "170 (Swing)",
+                desc: "「独占欲」と「物理的刻印」の証明。アコースティック楽器の歪みとスウィングビートの融合。",
+                specs: "Rickenbacker 330 / Cherry MX Blue"
+            },
+            {
+                id: "LOG_002",
+                title: "モニモニ",
+                genre: "Morning Drum & Bass",
+                bpm: "180",
+                desc: "「在庫切れ」の絶望と、朝の生々しい憂鬱。まどろみから覚醒へのグラデーション。",
+                specs: "Fender PB / Coffee Grinder Noise"
+            },
+            {
+                id: "LOG_003",
+                title: "しちゃった",
+                genre: "Erotic Kayo Trip-Hop",
+                bpm: "88",
+                desc: "戻れない境界線を超えた情念。吐息をパーカッションとして再構築したダウナーな一曲。",
+                specs: "Breath Samples / Seven Stars"
+            },
+            {
+                id: "LOG_004",
+                title: "相対整理論",
+                genre: "Bureaucratic Liquid Funk",
+                bpm: "190",
+                desc: "感情のカオスを論理の箱に押し込める「事務的断捨離」。ステープラーの音をビートに使用。",
+                specs: "Stapler / Scissors Foley"
+            },
+            {
+                id: "LOG_005",
+                title: "逸般的",
+                genre: "Broken Glass Drum'n'Bass",
+                bpm: "175",
+                desc: "「一般的」なレールからの脱線と、特注品の孤独の肯定。割れたガラスのキック音。",
+                specs: "Broken Glass / Cello Distortion"
+            },
+            {
+                id: "LOG_006",
+                title: "みすたいぽ",
+                genre: "Typing Percussion Tech",
+                bpm: "140",
+                desc: "人生の選択ミスを訂正せず「仕様」として確定するクリエイターのエゴ。",
+                specs: "Keyboard Typing ASMR"
+            },
+            {
+                id: "LOG_007",
+                title: "都会的喧騒曲",
+                genre: "Siren & Noise Ambient DnB",
+                bpm: "165",
+                desc: "都会のドロドロとした現実への冷徹な観察。サイレンと雑踏のサンプリング。",
+                specs: "Field Rec (Shibuya) / Siren"
+            },
+            {
+                id: "LOG_008",
+                title: "水槽の脳",
+                genre: "Liquid Ambient DnB",
+                bpm: "172",
+                desc: "デジタルな海に溶けていく諦観と心地よさ。炭酸水と水中の音響処理。",
+                specs: "Underwater Filter / Soda"
+            }
+        ];
+
+        const gears = {
+            "STRING_INSTRUMENTS": [
+                "Rickenbacker 330 (Jetglo)",
+                "Fender American Vintage II '66 Jazzmaster",
+                "Psychederhythm Psychomaster",
+                "Fender 70s Precision Bass",
+                "Atelier Z (5-String)"
+            ],
+            "PEDAL_SYSTEMS": [
+                "Vemuram Jan Ray (Overdrive)",
+                "Darkglass B7K Ultra (Bass Preamp)",
+                "Hologram Electronics Microcosm (Glitch)",
+                "Strymon BigSky (Reverb)"
+            ],
+            "RECORDING_CORE": [
+                "Universal Audio Apollo x8p",
+                "SONY PCM-D100 (Field Rec)",
+                "Marshall DSL100H",
+                "Cherry MX Blue Keyboard"
+            ]
+        };
+
+        // --- Components ---
+
+        const NavLink = ({ href, children }) => (
+            <a href={href} className="text-gray-500 hover:text-purple-400 font-mono text-sm transition-all duration-300 flex items-center gap-2 group tracking-wider">
+                <span className="w-1 h-1 bg-purple-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                <span className="group-hover:translate-x-1 transition-transform">{children}</span>
+            </a>
+        );
+
+        const SectionHeader = ({ title, sub, icon: Icon }) => (
+            <div className="mb-16 flex flex-col items-start border-l-2 border-purple-900 pl-6 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-purple-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="flex items-center gap-3 text-purple-500 mb-1 font-mono text-xs tracking-widest">
+                    {Icon && <Icon size={14} />}
+                    <span>// {sub}</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-white glitch-text group-hover:text-purple-50 transition-colors" data-text={title}>
+                    {title}
+                </h2>
+            </div>
+        );
+
+        const SpecTag = ({ label, value }) => (
+            <div className="border border-gray-800 bg-[#080808] p-3 flex flex-col gap-1 hover:border-purple-500/30 transition-colors group">
+                <span className="text-[10px] font-mono text-purple-500 tracking-wider group-hover:text-purple-400">{label}</span>
+                <span className="text-sm font-light text-gray-300 group-hover:text-white transition-colors">{value}</span>
+            </div>
+        );
+
+        // --- Main App ---
+
+        const App = () => {
+            const [scrolled, setScrolled] = useState(false);
+            const [activeTab, setActiveTab] = useState(0);
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <div className="min-h-screen relative selection:bg-purple-900 selection:text-white">
+                    
+                    {/* Navigation */}
+                    <nav className={`fixed w-full z-50 transition-all duration-500 border-b ${scrolled ? 'bg-[#050505]/95 backdrop-blur-sm border-purple-900/30 py-4' : 'bg-transparent border-transparent py-8'}`}>
+                        <div className="container mx-auto px-6 flex justify-between items-center">
+                            <div className="font-mono font-bold text-lg tracking-widest text-white flex items-center gap-2 group cursor-pointer">
+                                <Terminal className="w-5 h-5 text-purple-600 group-hover:text-purple-400 transition-colors" />
+                                <span className="group-hover:tracking-[0.2em] transition-all duration-300">NAY_TERMINAL</span>
+                            </div>
+                            <div className="hidden md:flex gap-10">
+                                <NavLink href="#architect">ARCHITECT</NavLink>
+                                <NavLink href="#logs">LOGS</NavLink>
+                                <NavLink href="#specs">SPECS</NavLink>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <header className="h-screen flex flex-col justify-center items-center relative overflow-hidden">
+                        {/* Background Noise/Grid */}
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,18,0)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,18,0)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)] opacity-20"></div>
+                        
+                        <div className="z-10 text-center space-y-2 max-w-4xl px-4">
+                            <div className="flex justify-center gap-4 mb-4 opacity-70">
+                                <span className="font-mono text-[10px] text-purple-500 border border-purple-900 px-2 py-1">> SYSTEM: ONLINE</span>
+                                <span className="font-mono text-[10px] text-purple-500 border border-purple-900 px-2 py-1">> AUDIO ENGINE: ACTIVE</span>
+                            </div>
+                            
+                            <h1 className="text-8xl md:text-[10rem] font-black text-white tracking-tighter leading-none glitch-wrapper mb-6 mix-blend-difference">
+                                <span className="glitch-text" data-text="NAY">NAY</span>
+                            </h1>
+                            
+                            <p className="font-mono text-purple-400 text-xs md:text-sm tracking-[0.3em] md:tracking-[0.5em] animate-pulse">
+                                DISSECT THE WORLD, RECONSTRUCT THE SOUND.
+                            </p>
+                        </div>
+
+                        {/* Scrolling Log Visual */}
+                        <div className="absolute bottom-12 left-12 hidden lg:block font-mono text-[10px] text-gray-700 space-y-1 select-none">
+                            <p>> init_core_module()...</p>
+                            <p>> loading_assets: 'Jan_Ray' [OK]</p>
+                            <p>> loading_assets: 'Microcosm' [OK]</p>
+                            <p>> checking_environment_noise... 45dB</p>
+                            <p>> ready_for_input_</p>
+                        </div>
+                    </header>
+
+                    {/* Profile Section */}
+                    <section id="architect" className="py-32 relative border-t border-gray-900">
+                        <div className="container mx-auto px-6">
+                            <SectionHeader title="ARCHITECT" sub="IDENTITY_CORE" icon={Fingerprint} />
+                            
+                            <div className="grid lg:grid-cols-12 gap-16 items-start">
+                                {/* Left: Text Content */}
+                                <div className="lg:col-span-7 space-y-10">
+                                    <div className="space-y-4">
+                                        <h3 className="text-3xl font-light text-white flex items-end gap-4">
+                                            寧 <span className="font-mono text-purple-600 text-lg">/ Nay</span>
+                                        </h3>
+                                        <div className="h-px w-20 bg-purple-600"></div>
+                                        <p className="font-mono text-gray-500 text-xs tracking-wider">AUDIO ARCHITECT / INDEPENDENT VTUBER</p>
+                                    </div>
+                                    
+                                    <div className="text-gray-300 leading-loose font-light space-y-6 text-justify">
+                                        <p className="text-lg italic text-purple-200/80 border-l-2 border-purple-900/50 pl-4">
+                                            「機材は美しい音を出すための道具ではない。<br/>世界を解剖するためのメスだ」
+                                        </p>
+                                        <p>
+                                            20代前半。独立系VTuberアーティスト。
+                                            既存のフォーマットに迎合しない冷徹なサウンドスケープと、アンニュイな歌声でインターネットの深層を漂う。
+                                        </p>
+                                        <p>
+                                            作詞、作曲、編曲、ミックス、マスタリング、そして映像編集に至るまで、クリエイティブの全工程を単独で完結させる「完全個人勢」。
+                                            事務用品の打鍵音、街の雑踏、ライターの着火音などの「生活ノイズ」をサンプリングし、歪んだベースラインと緻密なビートに縫合するスタイルは<span className="text-white font-normal">「音響解剖学」</span>と称される。
+                                        </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-6">
+                                        <SpecTag label="TOBACCO" value="Seven Stars (Soft)" />
+                                        <SpecTag label="LIQUOR" value="Denki Bran (40°)" />
+                                        <SpecTag label="STYLE" value="No Gimmick" />
+                                    </div>
+                                </div>
+
+                                {/* Right: Visual Abstract */}
+                                <div className="lg:col-span-5 relative">
+                                    <div className="aspect-square bg-[#080808] border border-gray-800 relative p-8 flex flex-col justify-between overflow-hidden group">
+                                        {/* Background Decor */}
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-900/20 blur-3xl rounded-full"></div>
+                                        
+                                        <div className="flex justify-between items-start z-10">
+                                            <Activity className="text-purple-600 w-8 h-8" />
+                                            <div className="text-right">
+                                                <div className="font-mono text-[10px] text-gray-600">ID: NAY_INDEPENDENT</div>
+                                                <div className="font-mono text-[10px] text-gray-600">STATUS: ACTIVE</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity duration-700">
+                                            {/* Fake Waveform Visual */}
+                                            <div className="flex gap-1 items-center h-32">
+                                                {[...Array(20)].map((_, i) => (
+                                                    <div key={i} className="w-2 bg-purple-500 transition-all duration-300" style={{
+                                                        height: `${Math.random() * 100}%`,
+                                                        opacity: Math.random()
+                                                    }}></div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="font-mono text-xs text-gray-500 z-10">
+                                            > SCANNING_TARGET... <br/>
+                                            > ANALYSIS_COMPLETE
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Discography Section */}
+                    <section id="logs" className="py-32 bg-[#080808] border-t border-gray-900">
+                        <div className="container mx-auto px-6">
+                            <SectionHeader title="LOGS" sub="DISCOGRAPHY_REGISTRY" icon={Database} />
+
+                            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {discography.map((track) => (
+                                    <div key={track.id} className="group bg-[#050505] border border-gray-800 hover:border-purple-600/50 p-6 flex flex-col h-full transition-all duration-300 hover:transform hover:-translate-y-1 relative overflow-hidden">
+                                        
+                                        {/* Hover Glow */}
+                                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-purple-900/10 blur-2xl rounded-full group-hover:bg-purple-600/10 transition-colors"></div>
+
+                                        <div className="flex justify-between items-start mb-4 border-b border-gray-900 pb-2">
+                                            <span className="font-mono text-[10px] text-purple-500 tracking-wider">{track.id}</span>
+                                            <Disc className="w-4 h-4 text-gray-700 group-hover:text-purple-500 transition-colors" />
+                                        </div>
+                                        
+                                        <h4 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">{track.title}</h4>
+                                        
+                                        <div className="mb-4 space-y-1">
+                                            <div className="font-mono text-[10px] text-gray-500 uppercase tracking-tight">{track.genre}</div>
+                                            <div className="font-mono text-[10px] text-gray-600">BPM: {track.bpm}</div>
+                                        </div>
+                                        
+                                        <p className="text-xs text-gray-400 leading-relaxed mb-6 font-light flex-grow">
+                                            {track.desc}
+                                        </p>
+                                        
+                                        <div className="pt-4 border-t border-gray-900 mt-auto">
+                                            <div className="flex items-center gap-2 text-[9px] font-mono text-gray-600 group-hover:text-purple-300 transition-colors">
+                                                <Cpu size={10} />
+                                                {track.specs}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Gear Section */}
+                    <section id="specs" className="py-32 relative border-t border-gray-900">
+                        <div className="container mx-auto px-6">
+                            <SectionHeader title="SPECS" sub="SYSTEM_WEAPONRY" icon={Zap} />
+                            
+                            <div className="grid md:grid-cols-3 gap-8">
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-3 text-purple-400 font-mono border-b border-purple-900/50 pb-2">
+                                        <Layers size={16} />
+                                        <span className="tracking-widest">STRINGS</span>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {gears.STRING_INSTRUMENTS.map((item, i) => (
+                                            <li key={i} className="font-mono text-xs text-gray-400 flex items-center gap-3 hover:text-white transition-colors cursor-default group">
+                                                <span className="w-1 h-1 bg-gray-700 group-hover:bg-purple-500 transition-colors"></span>
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-3 text-purple-400 font-mono border-b border-purple-900/50 pb-2">
+                                        <Speaker size={16} />
+                                        <span className="tracking-widest">PEDALS</span>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {gears.PEDAL_SYSTEMS.map((item, i) => (
+                                            <li key={i} className="font-mono text-xs text-gray-400 flex items-center gap-3 hover:text-white transition-colors cursor-default group">
+                                                <span className="w-1 h-1 bg-gray-700 group-hover:bg-purple-500 transition-colors"></span>
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-3 text-purple-400 font-mono border-b border-purple-900/50 pb-2">
+                                        <Mic2 size={16} />
+                                        <span className="tracking-widest">REC_CORE</span>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {gears.RECORDING_CORE.map((item, i) => (
+                                            <li key={i} className="font-mono text-xs text-gray-400 flex items-center gap-3 hover:text-white transition-colors cursor-default group">
+                                                <span className="w-1 h-1 bg-gray-700 group-hover:bg-purple-500 transition-colors"></span>
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Footer */}
+                    <footer className="bg-[#020202] border-t border-gray-900 py-16">
+                        <div className="container mx-auto px-6 text-center space-y-8">
+                            <div className="flex justify-center gap-12">
+                                <a href="#" className="text-gray-600 hover:text-white transition-colors flex items-center gap-2 font-mono text-xs tracking-wider group">
+                                    <ExternalLink className="w-3 h-3 group-hover:text-red-500 transition-colors" /> YOUTUBE
+                                </a>
+                                <a href="#" className="text-gray-600 hover:text-white transition-colors flex items-center gap-2 font-mono text-xs tracking-wider group">
+                                    <ExternalLink className="w-3 h-3 group-hover:text-blue-400 transition-colors" /> BILIBILI
+                                </a>
+                                <a href="#" className="text-gray-600 hover:text-white transition-colors flex items-center gap-2 font-mono text-xs tracking-wider group">
+                                    <ExternalLink className="w-3 h-3 group-hover:text-white transition-colors" /> X (TWITTER)
+                                </a>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="font-mono text-[10px] text-gray-800 tracking-[0.2em]">
+                                    System Integrity Verified
+                                </div>
+                                <div className="font-mono text-[10px] text-gray-700">
+                                    &copy; 2026 NAY / AUDIO ARCHITECT. ALL RIGHTS RESERVED.
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
