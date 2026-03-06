@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja" style="background-color: #050505;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#050505">
+    <title>NAY | Audio Architect / Official Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400;700&family=Noto+Sans+JP:wght@300;400;700&family=Zen+Old+Mincho:wght@400;700&family=Shippori+Mincho:wght@400;700&family=IBM+Plex+Sans+JP:wght@300;400&family=BIZ+UDPMincho&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #7c3aed;
+            --alert: #ef4444;
+            --bg: #050505;
+            --font-main-text: 'Zen Old Mincho', serif;
+        }
+
+        /* 基本設定 */
+        html {
+            background-color: var(--bg);
+            height: 100%;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+            background-color: transparent;
+            color: #e5e5e5;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            overflow-x: hidden;
+            overflow-y: visible;
+            position: relative;
+            cursor: none; /* デフォルトカーソル非表示 */
+        }
+
+
+        /* タッチデバイス対策 */
+        @media (hover: none) and (pointer: coarse) {
+            html, body { cursor: auto; }
+            .custom-cursor { display: none !important; }
+        }
+
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .architect-body { font-family: var(--font-main-text); letter-spacing: 0.05em; }
+
+
+        /* 背景レイヤー */
+        .bg-container {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: -1; overflow: hidden;
+        }
+        .bg-grid {
+            position: absolute; inset: 0;
+            background-image: radial-gradient(circle at 2px 2px, rgba(124, 58, 237, 0.05) 1px, transparent 0);
+            background-size: 32px 32px;
+        }
+        .bg-noise {
+            position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E");
+            opacity: 0.03;
+        }
+        .scanline {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(124, 58, 237, 0.05) 50%);
+            background-size: 100% 4px; opacity: 0.1;
+        }
+
+
+        /* カスタムカーソル */
+        .custom-cursor { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99999; mix-blend-mode: exclusion; }
+        #cursor-dot { width: 4px; height: 4px; background: white; border-radius: 50%; transform: translate(-50%, -50%); }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s; }
+        body.hovering #cursor-ring { width: 60px; height: 60px; border-color: var(--alert); background: rgba(239, 68, 68, 0.1); }
+        #cursor-ring::before, #cursor-ring::after { content: ''; position: absolute; top: 50%; left: 50%; background: rgba(255,255,255,0.3); transform: translate(-50%, -50%); }
+        #cursor-ring::before { width: 4px; height: 1px; }
+        #cursor-ring::after { width: 1px; height: 4px; }
+
+
+        /* 隠し要素 */
+        .hidden-eye { position: absolute; font-size: 24px; color: #333; opacity: 0.02; z-index: 50; cursor: none; transition: opacity 0.5s, color 0.5s, transform 0.5s; user-select: none; }
+        .hidden-eye:hover { opacity: 0.8; color: var(--alert); transform: scale(1.2); text-shadow: 0 0 10px var(--alert); }
+        #abyss-overlay { position: fixed; inset: 0; background: #000; z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.1s; }
+        #abyss-overlay.active { opacity: 1; pointer-events: auto; }
+        .abyss-msg { font-family: 'Zen Old Mincho', serif; color: var(--alert); font-size: 1.5rem; letter-spacing: 0.2em; text-align: center; margin-bottom: 2rem; }
+
+
+        /* アニメーション */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease-out; }
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .glitch-text { position: relative; display: inline-block; }
+        .glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); }
+        .glitch-text::before { left: 2px; text-shadow: -2px 0 #7c3aed; clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%); animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+        .glitch-text::after { left: -2px; text-shadow: -2px 0 #00ffff; clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+        @keyframes glitch-anim-1 { 0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); } 100% { clip-path: inset(30% 0 40% 0); transform: translate(1px, -1px); } }
+        @keyframes glitch-anim-2 { 0% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -1px); } 100% { clip-path: inset(0% 0 90% 0); transform: translate(-2px, 1px); } }
+
+
+        .track-card {
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+        .track-card:hover {
+            border-color: var(--accent);
+            background: rgba(124, 58, 237, 0.08);
+            transform: translateY(-8px);
+        }
+
+        /* 共通アコーディオン設定 */
+        .info-item, .gear-item, .track-item-content, .architect-trigger {
+            transition: all 0.4s ease;
+            background: transparent;
+        }
+        .info-item:hover, .gear-item:hover, .architect-trigger:hover {
+            background: rgba(124, 58, 237, 0.02);
+        }
+        .info-item.active, .gear-item.active, .track-card.active, .architect-trigger.active {
+            background: rgba(124, 58, 237, 0.05);
+            border-color: var(--accent);
+        }
+        /* トラックカードのアクティブ時はボーダーを強調 */
+        .track-card.active {
+            background: rgba(124, 58, 237, 0.08);
+            transform: translateY(-4px);
+        }
+
+
+        /* 詳細エリア */
+        .info-details, .gear-details, .track-details, .architect-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* ギア専用アイコン回転 */
+        .gear-toggle span { display: inline-block; transition: transform 0.3s; }
+        .gear-item.active .gear-toggle span { transform: rotate(45deg); color: var(--accent); }
+
+
+        section { scroll-margin-top: 100px; }
+        .section-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); margin-bottom: 12px; display: block; letter-spacing: 0.5em; }
+
+        /* プロフィール用 */
+        .architect-trigger { cursor: pointer; border-radius: 4px; padding: 4px; margin: -4px; }
+        .profile-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #7c3aed; letter-spacing: 0.1em; display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body class="selection:bg-purple-900 selection:text-white relative">
+    <div class="bg-container">
+        <div class="bg-grid"></div>
+        <div class="bg-noise"></div>
+        <div class="scanline"></div>
+    </div>
+
+
+    <div id="loader">
+        <h1 class="text-4xl md:text-5xl font-black text-white tracking-[0.3em] glitch-text" data-text="NAY">NAY</h1>
+        <div class="loader-log font-mono text-[10px] text-purple-500 mt-4 tracking-widest" id="loader-log-text">SYSTEM_BOOTING_...</div>
+    </div>
+
+
+    <div id="cursor-dot" class="custom-cursor"></div>
+    <div id="cursor-ring" class="custom-cursor"></div>
+
+
+    <div id="abyss-overlay">
+        <div class="abyss-msg glitch-text" data-text="お前がこちらを覗いている時、私もまたお前を覗いているのだ">お前がこちらを覗いている時、<br>私もまたお前を覗いているのだ</div>
+        <div class="font-mono text-red-500 text-xs animate-pulse">FATAL_SYSTEM_ERROR: UNAUTHORIZED_OBSERVATION</div>
+    </div>
+
+
+    <!-- Frame -->
+    <div class="fixed inset-0 border-[8px] md:border-[20px] border-black z-40 pointer-events-none opacity-20 md:opacity-100"></div>
+    <div class="fixed bottom-8 right-10 z-50 font-mono text-[8px] text-gray-600 hidden md:block text-right pointer-events-none">
+        TERMINAL_ID: NAY_ANATOMY_0.1<br>LOC: 35.6895° N, 139.6917° E<br>
+        <span class="hidden-eye pointer-events-auto" onclick="triggerAbyss()" style="position: relative; right: -20px; top: -10px;">👁️‍🗨️</span>
+    </div>
+
+
+    <nav id="nav" class="fixed w-full z-50 transition-all duration-700 border-b border-transparent py-6 md:py-10">
+        <div class="container mx-auto px-6 md:px-10 flex justify-between items-center">
+            <div class="font-mono font-bold text-sm md:text-lg tracking-[0.2em] text-white flex items-center gap-2 cursor-pointer group hover-target" onclick="scrollToSection('top')">
+                <span class="text-purple-600 group-hover:animate-ping">●</span> NAY_TERM
+            </div>
+            <div class="hidden md:flex gap-12 font-mono text-[10px] text-gray-500 tracking-[0.4em]">
+                <span onclick="scrollToSection('architect')" class="cursor-pointer hover:text-white transition-all hover-target">01 ARCHITECT</span>
+                <span onclick="scrollToSection('logs')" class="cursor-pointer hover:text-white transition-all hover-target">02 LOGS</span>
+                <span onclick="scrollToSection('specs')" class="cursor-pointer hover:text-white transition-all hover-target">03 SPECS</span>
+                <span onclick="scrollToSection('info')" class="cursor-pointer hover:text-white transition-all hover-target">04 INFO</span>
+            </div>
+            <div class="md:hidden flex gap-4 font-mono text-[9px] text-gray-500"><span onclick="scrollToSection('architect')">01</span><span onclick="scrollToSection('logs')">02</span><span onclick="scrollToSection('specs')">03</span><span onclick="scrollToSection('info')">04</span></div>
+        </div>
+    </nav>
+
+
+    <header id="top" class="h-screen flex flex-col justify-center items-center relative text-center px-4 overflow-hidden">
+        <div class="z-10 space-y-6 md:space-y-8 reveal" id="hero-reveal">
+            <div class="font-mono text-[8px] md:text-[9px] text-purple-500 tracking-[0.4em] md:tracking-[0.8em] opacity-80 uppercase">Anatomy of Sound / Digital Archive</div>
+            <h1 class="text-6xl md:text-[14rem] font-black text-white tracking-tighter leading-none glitch-text" data-text="NAY">NAY</h1>
+            <p class="font-mono text-gray-500 text-[9px] md:text-xs tracking-[0.2em] md:tracking-[0.6em] max-w-2xl mx-auto uppercase leading-loose px-2">"機材は美しい音を出すための道具ではない。<br>世界を解剖するためのメスだ"</p>
+        </div>
+        <div class="absolute bottom-20 flex flex-col items-center gap-4 opacity-30"><div class="w-px h-12 md:h-16 bg-gradient-to-b from-white to-transparent"></div><span class="font-mono text-[8px] tracking-[0.5em]">ENTRY</span></div>
+    </header>
+
+
+    <section id="architect" class="py-24 md:py-60 container mx-auto px-6 md:px-10 relative z-10 reveal">
+        <div class="flex flex-col lg:flex-row gap-16 md:gap-32">
+            <div class="lg:w-1/3">
+                <span class="font-mono text-xs text-purple-600 tracking-[0.5em] mb-4 block">01 / ARCHIVE</span>
+                <h2 class="text-5xl md:text-7xl font-bold text-white tracking-tighter glitch-text mb-12" data-text="ARCHITECT">ARCHITECT</h2>
+                <div class="relative w-full h-0"><span class="hidden-eye pointer-events-auto" onclick="triggerAbyss()" style="top: -80px; left: -20px;">👁️‍🗨️</span></div>
+
+                <div class="space-y-4 font-mono text-[10px]">
+                    <!-- ここをクリックで展開 -->
+                    <div class="architect-trigger border-b border-white/10 pb-3 hover:border-purple-500 hover:text-white transition-colors" onclick="toggleArchitect(this)">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 tracking-widest">NAME</span>
+                            <span class="text-white flex items-center gap-2">NAY / 寧 <span class="text-purple-500 text-[8px]">▼</span></span>
+                        </div>
+                        <!-- 詳細プロフィール -->
+                        <div class="architect-details text-gray-400 mt-2">
+                            <div class="pt-4 pb-2 grid gap-4 border-t border-purple-900/30">
+                                <div>
+                                    <span class="profile-label">DATA</span>
+                                    <p>20代女性 / 3月22日生まれ</p>
+                                </div>
+                                <div>
+                                    <span class="profile-label">INTERESTS</span>
+                                    <ul class="list-disc list-inside space-y-1 ml-1 text-gray-300">
+                                        <li>フィールドワークと写真撮影</li>
+                                        <li>車（機材車ラシーン（ペールグリーン）/ 秘密の愛車）</li>
+                                        <li>散歩（深夜かごはんを食べるついで）</li>
+                                        <li>中国料理</li>
+                                        <li>古着とファッション</li>
+                                    </ul>
+                                </div>
+                                <div class="mt-2 p-3 bg-purple-900/10 border-l border-purple-500">
+                                    <span class="profile-label">MESSAGE</span>
+                                    <p class="architect-body italic text-white text-xs leading-relaxed">
+                                        「…まぁ…人生色々辛いことばっかだけど…適当にいこうよ。」
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="flex justify-between border-b border-white/10 pb-3 hover:border-purple-500 transition-colors"><span class="text-gray-500 tracking-widest">STATUS</span><span class="text-purple-500">INDIE_ANATOMIST</span></div>
+                </div>
+            </div>
+            <div class="lg:w-2/3">
+                <p class="architect-body text-xl md:text-3xl text-gray-200 leading-relaxed font-light mb-12 text-justify">
+                    既存の音楽フォーマットを「標本」として捉え、その構造を破壊・再定義する音響建築家。
+                    歌唱からマスタリング、ビジュアル構築までを一人で完結させる「完全個人勢」としての独立性を堅持する。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 font-mono">
+                    <div class="border-l border-white/10 pl-6 group hover-target"><span class="text-purple-500 text-[9px] block mb-2 tracking-widest opacity-50 group-hover:opacity-100 transition-opacity uppercase">Probability: Tobacco</span><div class="text-white text-xs">Seven Stars / Garam</div></div>
+                    <div class="border-l border-white/10 pl-6 group hover-target"><span class="text-purple-500 text-[9px] block mb-2 tracking-widest opacity-50 group-hover:opacity-100 transition-opacity uppercase">Probability: Liquor</span><div class="text-white text-xs">Denki Bran</div></div>
+                    <div class="border-l border-white/10 pl-6 group hover-target"><span class="text-purple-500 text-[9px] block mb-2 tracking-widest opacity-50 group-hover:opacity-100 transition-opacity uppercase">Probability: Lighter</span><div class="text-white text-xs">S.T. Dupont (Gold)</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="logs" class="py-24 md:py-60 bg-[#080808]/80 border-y border-white/5 relative z-10 reveal">
+        <div class="container mx-auto px-6 md:px-10">
+            <span class="font-mono text-xs text-purple-600 tracking-[0.5em] mb-4 block">02 / LOGS</span>
+            <h2 class="text-5xl md:text-7xl font-bold text-white tracking-tighter glitch-text mb-20" data-text="LOGS">LOGS</h2>
+            <div id="track-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        </div>
+    </section>
+
+
+    <section id="specs" class="py-24 md:py-60 container mx-auto px-6 md:px-10 relative z-10 reveal">
+        <div class="flex flex-col lg:flex-row gap-16">
+            <div class="lg:w-1/3">
+                <span class="font-mono text-xs text-purple-600 tracking-[0.5em] mb-4 block">03 / WEAPONS</span>
+                <h2 class="text-5xl md:text-7xl font-bold text-white tracking-tighter glitch-text mb-8" data-text="SPECS">SPECS</h2>
+            </div>
+            <div id="gear-grid" class="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-12 font-mono">
+                <!-- JSで動的生成 -->
+            </div>
+        </div>
+    </section>
+
+
+    <section id="info" class="py-24 md:py-60 bg-[#080808]/50 border-t border-white/5 relative z-10 reveal">
+        <div class="container mx-auto px-6 md:px-10">
+            <span class="font-mono text-xs text-purple-600 tracking-[0.5em] mb-4 block">04 / DISPATCH</span>
+            <h2 class="text-5xl md:text-7xl font-bold text-white tracking-tighter glitch-text mb-12" data-text="INFO">INFO</h2>
+            <div id="info-list" class="flex flex-col"></div>
+        </div>
+    </section>
+
+
+    <footer class="py-24 md:py-40 text-center font-mono text-[9px] text-gray-700 bg-black relative z-10">
+        <div class="mb-12 flex flex-col md:flex-row justify-center gap-6 md:gap-16 text-gray-500 uppercase tracking-[0.5em]">
+            <span class="hover:text-white transition-all cursor-pointer hover-target">Youtube</span>
+            <span class="hover:text-white transition-all cursor-pointer hover-target">Twitter</span>
+            <span class="hover:text-white transition-all cursor-pointer hover-target">Bilibili</span>
+        </div>
+        <div class="opacity-20 uppercase tracking-[0.8em]">
+            © 2026 NAY / AUDIO ARCHITECT.
+            <span class="hidden-eye pointer-events-auto" onclick="triggerAbyss()" style="position: absolute; margin-left: 20px;">👁️‍🗨️</span>
+        </div>
+    </footer>
+
+
+    <script>
+        function scrollToSection(id) { const el = document.getElementById(id); if (el) { const offset = 100; window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' }); } }
+
+        window.addEventListener('load', () => {
+            const logs = ["INITIATING_BOOT...", "LOADING_ANATOMY...", "SYNCING_AUDIO...", "ACCESS_GRANTED", "READY_TO_DISSECT"];
+            let i = 0; const logEl = document.getElementById('loader-log-text');
+            const interval = setInterval(() => { logEl.textContent = logs[i++]; if (i >= logs.length) { clearInterval(interval);
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; document.getElementById('hero-reveal').classList.add('active'); }, 800);
+            } }, 250);
+        });
+
+        const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); }); }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+
+        // カスタムカーソル
+        const dot = document.getElementById('cursor-dot');
+        const ring = document.getElementById('cursor-ring');
+        let mouseX = 0, mouseY = 0;
+        let ringX = 0, ringY = 0;
+        document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; dot.style.top = mouseY + 'px'; dot.style.left = mouseX + 'px'; });
+        function animateCursor() { ringX += (mouseX - ringX) * 0.15; ringY += (mouseY - ringY) * 0.15; ring.style.top = ringY + 'px'; ring.style.left = ringX + 'px'; requestAnimationFrame(animateCursor); }
+        animateCursor();
+        document.querySelectorAll('a, button, .hover-target, .track-card, .info-item, .cursor-pointer, .gear-item, .architect-trigger').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+
+
+        window.triggerAbyss = function() { const overlay = document.getElementById('abyss-overlay'); overlay.classList.add('active'); setTimeout(() => { location.reload(); }, 4000); };
+
+
+        // プロフィール展開関数
+        window.toggleArchitect = function(element) {
+            const details = element.querySelector('.architect-details');
+            const isActive = element.classList.contains('active');
+
+            if (!isActive) {
+                element.classList.add('active');
+                details.style.maxHeight = details.scrollHeight + "px";
+            } else {
+                element.classList.remove('active');
+                details.style.maxHeight = null;
+            }
+        };
+
+
+        // 楽曲データ（歌詞・コメント付き）
+        const discography = [
+            {
+                id: "LOG_001", title: "えんぐれーびんぐ", genre: "Distorted Electro Swing", desc: "「独占欲」と「物理的刻印」の証明。",
+                lyric: "ねえ　のみとハンマー　貸してちょうだい / きみのカタチ　忘れちゃう前に<br>痛みだけが　唯一の　確かな記録媒体",
+                comment: "物理的な傷跡だけが、風化しない記憶になる。"
+            },
+            {
+                id: "LOG_002", title: "モニモニ", genre: "Morning Drum & Bass", desc: "朝の憂鬱と覚醒のグラデーション。",
+                lyric: "モニモニ　もう無理　世界が眩しい / 脳内メモリ　起動に失敗<br>コーヒーの黒で　視界を塗りつぶして",
+                comment: "朝日は暴力。カーテンの隙間から撃ち抜かれる。"
+            },
+            {
+                id: "LOG_003", title: "しちゃった", genre: "Erotic Kayo Trip-Hop", desc: "戻れない境界線を超えた情念。",
+                lyric: "しちゃった　しちゃった　間違い探し / ボタンひとつ　掛け違えて<br>戻れないなら　このまま　地獄までドライブ",
+                comment: "後悔？してないよ。堕ちていく速度を楽しんでるだけ。"
+            },
+            {
+                id: "LOG_004", title: "相対整理論", genre: "Bureaucratic Liquid Funk", desc: "感情を論理の箱に押し込める事務的断捨離。",
+                lyric: "案件名「キミ」　分類コード・エラー / 記憶のフォルダ　容量超過です<br>ゴミ箱を空にしますか？　[Y/N]",
+                comment: "感情をフォルダ分けできると思った？ 浅はかだね。"
+            },
+            {
+                id: "LOG_005", title: "逸般的", genre: "Broken Glass Drum'n'Bass", desc: "「一般的」なレールからの脱線。",
+                lyric: "逸般的　逸般的　はみ出し者です / レールの上なら　脱線事故<br>普通のフリして　息をするのは　もう飽きた",
+                comment: "規格外品（エラー）として生きる。それが私の仕様。"
+            },
+            {
+                id: "LOG_006", title: "みすたいぽ", genre: "Typing Percussion Tech", desc: "人生の選択ミスを「仕様」として確定する。",
+                lyric: "みすたいぽ　みすたいぽ　訂正しません / 間違ったままの　私が正解<br>赤い波線　無視して　送信ボタンを押す",
+                comment: "誤字こそが本音。バックスペースキーは捨てた。"
+            },
+            {
+                id: "LOG_007", title: "都会的喧騒曲", genre: "Siren & Noise Ambient DnB", desc: "都会の現実への冷徹な観察。",
+                lyric: "都会的喧騒曲　耳を塞いで / 欲望のサイレン　鳴り止まない<br>コンクリートの森で　誰もが　何かを探してるフリ",
+                comment: "東京は巨大なノイズ発生装置。私はそれをサンプリングするだけ。"
+            },
+            {
+                id: "LOG_008", title: "水槽の脳", genre: "Liquid Ambient DnB", desc: "デジタルな海に溶けていく諦観。",
+                lyric: "羊水みたいな　データの海で / 私は今日も　夢を見る<br>プラグを抜かないで　ここが私の　ユートピア",
+                comment: "肉体なんて重たいハードウェア、脱ぎ捨ててしまえばいい。"
+            },
+            {
+                id: "LOG_009", title: "隔絶インターフェイス", genre: "Hard Electronica", desc: "画面越しの関係こそが真実。リスナーを「バグ」と断じる。",
+                lyric: "モニター越しの　愛だけ信じる / 実体なんて　バグの塊<br>解像度が下がるから　それ以上　近づかないで",
+                comment: "触れられない距離だけが、美しさを担保する。"
+            },
+            {
+                id: "LOG_010", title: "ノイズ・キャンセリング・ラブ", genre: "Minimalist Glitch Pop", desc: "溢れる「好き」を騒音として処理する。",
+                lyric: "君の『好き』は　騒音（ノイズ）判定 / 無音の部屋で　一人になりたい<br>ノイズキャンセリングON　世界は静寂に包まれる",
+                comment: "「好き」という言葉の波形が、一番耳障りなんだ。"
+            },
+            {
+                id: "LOG_011", title: "甘靡（かんび）", genre: "Decadent Duet Waltz", desc: "理芽（RIM）との退廃的なデュエット。",
+                lyric: "甘靡な毒を　ひとくち頂戴 / 理性とか　道徳とか　シュレッダーにかけて<br>踊りましょう　終わる世界で　二人きり",
+                comment: "共犯者ごっこ。……悪くないね。"
+            }
+        ];
+
+        // 機材データ
+        const gearsData = {
+            "STRINGS": [
+                { name: "Rickenbacker 330 (Jetglo)", detail: "Semi-Hollow Body / Hi-Gain Pickups", comment: "「歪ませた時の空洞音が、私の空虚さと共鳴する。」" },
+                { name: "Fender American Vintage II '66 Jazzmaster", detail: "Witch Hat Knobs / Block Inlays", comment: "「ジャズのための楽器ではない。ノイズのための凶器だ。」" },
+                { name: "Psychederhythm Psychomaster", detail: "Limited Edition / Custom Wound PU", comment: "「精神的（Psycho）な揺らぎを物理的に出力する。」" },
+                { name: "Atelier Z (5-String)", detail: "Heavy Weight Ash Body / Active Circuit", comment: "「地を這う重低音が、理性を強制的にシャットダウンさせる。」" }
+            ],
+            "PEDALS": [
+                { name: "Vemuram Jan Ray", detail: "Overdrive / Brass Enclosure", comment: "「上品な歪みなど求めていない。求めているのは、解像度の高い汚濁だ。」" },
+                { name: "Darkglass B7K Ultra", detail: "Bass Preamp / Distortion", comment: "「ベースラインを骨まで砕くための粉砕機。」" },
+                { name: "Hologram Electronics Microcosm", detail: "Granular Looper / Glitch", comment: "「時間を微細に切り刻み、再構築する。記憶の改竄と同じプロセス。」" },
+                { name: "Strymon BigSky", detail: "Multidimensional Reverb", comment: "「ここではないどこかへ、意識を飛ばすための装置。」" }
+            ],
+            "REC_CORE": [
+                { name: "Universal Audio Apollo x8p", detail: "Thunderbolt 3 Audio Interface", comment: "「現実世界のアナログ信号を、冷徹なデジタルデータへと変換する入り口。」" },
+                { name: "SONY PCM-D100", detail: "High-Resolution Portable Recorder", comment: "「街の喧騒、他人の会話、電車の通過音。世界をサンプリングするための耳。」" },
+                { name: "Marshall DSL100H", detail: "All-Valve Amplifier Head", comment: "「真空管の悲鳴を聴くためだけの箱。」" },
+                { name: "Cherry MX Blue Keyboard", detail: "Mechanical Switch / Clicky", comment: "「打鍵音こそが、私がネットに存在している唯一の証拠。」" }
+            ]
+        };
+
+
+        // Track生成ロジック（アコーディオン）
+        const trackGrid = document.getElementById('track-grid');
+        discography.forEach(t => {
+            trackGrid.innerHTML += `
+                <div class="track-card bg-black/40 p-8 group hover-target cursor-pointer" onclick="toggleTrack(this)">
+                    <div>
+                        <div class="text-purple-500 font-mono text-[8px] mb-4 tracking-widest">${t.id}</div>
+                        <h4 class="text-2xl font-bold text-white mb-3 group-hover:text-purple-400 transition-colors">${t.title}</h4>
+                        <div class="text-gray-600 font-mono text-[8px] uppercase tracking-widest mb-4 border-b border-white/5 pb-2">${t.genre}</div>
+                        <p class="text-gray-400 text-xs font-light leading-loose">${t.desc}</p>
+                    </div>
+                    <div class="track-details text-xs text-gray-400 overflow-hidden max-h-0 transition-all duration-500">
+                        <div class="pt-6 border-t border-white/10 mt-6 grid gap-4">
+                            <div class="font-mono text-[10px] tracking-wider text-purple-400/50 uppercase">LYRIC_FRAGMENT:</div>
+                            <p class="architect-body text-gray-300 leading-7 border-l-2 border-purple-900/50 pl-3">
+                                ${t.lyric}
+                            </p>
+                            <div class="mt-2 text-right">
+                                <span class="font-mono text-[8px] text-purple-500 tracking-widest block mb-1">NAY'S NOTE:</span>
+                                <span class="text-white italic text-[11px]">"${t.comment}"</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="text-[10px] font-mono text-purple-500 tracking-widest toggle-icon">▼ EXPAND</span>
+                    </div>
+                </div>
+            `;
+        });
+
+
+        // Trackアコーディオン切り替え関数
+        window.toggleTrack = function(element) {
+            const details = element.querySelector('.track-details');
+            const icon = element.querySelector('.toggle-icon');
+            const isActive = element.classList.contains('active');
+
+
+            // 他を閉じる
+            const siblings = element.parentElement.querySelectorAll('.track-card');
+            siblings.forEach(sib => {
+                if (sib !== element) {
+                    sib.classList.remove('active');
+                    sib.querySelector('.track-details').style.maxHeight = null;
+                    sib.querySelector('.toggle-icon').textContent = '▼ EXPAND';
+                }
+            });
+
+
+            if (!isActive) {
+                element.classList.add('active');
+                details.style.maxHeight = details.scrollHeight + "px";
+                icon.textContent = '▲ COLLAPSE';
+            } else {
+                element.classList.remove('active');
+                details.style.maxHeight = null;
+                icon.textContent = '▼ EXPAND';
+            }
+        };
+
+        // Gear生成ロジック（アコーディオン）
+        const gearGrid = document.getElementById('gear-grid');
+        for (const [cat, items] of Object.entries(gearsData)) {
+            let itemsHtml = items.map(item => `
+                <div class="gear-item p-4 border-b border-white/5 cursor-pointer hover-target group" onclick="toggleGear(this)">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <span class="w-1 h-px bg-purple-600 group-hover:w-3 transition-all duration-300"></span>
+                            <span class="text-gray-400 group-hover:text-white transition-colors text-sm">${item.name}</span>
+                        </div>
+                        <div class="gear-toggle text-purple-500 font-mono text-xs"><span class="plus">＋</span></div>
+                    </div>
+                    <div class="gear-details text-xs text-gray-500 overflow-hidden max-h-0 transition-all duration-500">
+                        <div class="pt-3 pl-4 grid gap-2">
+                            <div class="font-mono text-[10px] tracking-wider text-purple-400/70 uppercase border-l border-purple-900 pl-2">${item.detail}</div>
+                            <p class="architect-body text-gray-400 pl-2 italic">"${item.comment}"</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            gearGrid.innerHTML += `
+                <div class="mb-10">
+                    <h3 class="text-white border-b border-white/10 pb-4 mb-4 tracking-[0.4em] font-bold text-sm uppercase">${cat}</h3>
+                    <div class="flex flex-col gap-2">${itemsHtml}</div>
+                </div>
+            `;
+        }
+
+
+        // Gearアコーディオン切り替え関数
+        window.toggleGear = function(element) {
+            const details = element.querySelector('.gear-details');
+            const toggleIcon = element.querySelector('.gear-toggle span');
+            const isActive = element.classList.contains('active');
+
+
+            const siblings = element.parentElement.querySelectorAll('.gear-item');
+            siblings.forEach(sib => {
+                if (sib !== element) {
+                    sib.classList.remove('active');
+                    sib.querySelector('.gear-details').style.maxHeight = null;
+                    sib.querySelector('.gear-toggle span').textContent = '＋';
+                }
+            });
+
+
+            if (!isActive) {
+                element.classList.add('active');
+                details.style.maxHeight = details.scrollHeight + "px";
+                toggleIcon.textContent = '－';
+            } else {
+                element.classList.remove('active');
+                details.style.maxHeight = null;
+                toggleIcon.textContent = '＋';
+            }
+        };
+
+        const info = [
+            {
+                date: "2026.04.24", category: "LIVE", title: "NAY 1st Solo Exhibition \"DISSECTION\"", venue: "EBISU LIQUIDROOM", status: "TICKET AVAILABLE",
+                details: "初の単独公演。音響と映像をリアルタイムで同期させ、聴衆の知覚を「解剖」する実験的ライブパフォーマンス。新曲を含む全15曲を披露予定。",
+                price: "ADV ¥6,000 / DOOR ¥6,500 (+1D)",
+                time: "OPEN 18:00 / START 19:00",
+                access: "東京都渋谷区東3-16-6 (JR恵比寿駅より徒歩3分)",
+                comment: "「最初の切開。遅れないように。」"
+            },
+            {
+                date: "2026.07.12", category: "LIVE", title: "CONNECTED V-WORKS 2026", venue: "TOYOSU PIT", status: "COMING SOON",
+                details: "国内最大級のVアーティストフェスへの出演が決定。メインステージにて、バンドセットでのパフォーマンスを行う。",
+                price: "ALL STANDING ¥8,800",
+                time: "OPEN 13:00 / START 14:00",
+                access: "東京都江東区豊洲6-1-23 (ゆりかもめ新豊洲駅より徒歩2分)",
+                comment: "「混沌に接続する。ただのノードのひとつとして。」"
+            },
+            {
+                date: "2026.10.18", category: "LIVE", title: "[PROTOTYPE_02] - Underground Session", venue: "SHIBUYA WWW X", status: "COMING SOON",
+                details: "深夜帯に行われる実験的セッション。重低音とグリッチノイズに特化したセットリストで、通常のライブとは異なる音響体験を提供する。",
+                price: "¥4,500 (+1D) ※20歳未満入場不可",
+                time: "OPEN/START 23:30 (ALL NIGHT)",
+                access: "東京都渋谷区宇田川町13-17 ライズビル2F",
+                comment: "「新しい試作機のテスト。暗闇を好む者たちへ。」"
+            },
+            {
+                date: "2026.01.13", category: "NEWS", title: "NAY Official Terminal System Updated.", venue: "NETWORK", status: "COMPLETED",
+                details: "公式ターミナル（Webサイト）のシステムアップデートが完了。視覚情報の最適化と、隠蔽されていたいくつかのアーカイブへのアクセス権限を開放。",
+                price: "FREE ACCESS",
+                time: "SYSTEM TIME: 00:00:00",
+                access: "https://nay-anatomy.com",
+                comment: "「システムは最適化された。監視能力も向上している。」"
+            }
+        ];
+
+
+        // Info生成ロジック（アコーディオン実装）
+        const infoList = document.getElementById('info-list');
+        info.forEach((i, index) => {
+            infoList.innerHTML += `
+                <div class="info-item p-6 md:p-10 cursor-pointer hover-target" onclick="toggleInfo(this)">
+                    <div class="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+                        <div class="flex items-center gap-6 md:gap-10 md:w-60 shrink-0">
+                            <span class="font-mono text-[10px] text-gray-600 tracking-widest">${i.date}</span>
+                            <span class="font-mono text-[8px] px-3 py-1 border border-purple-900 text-purple-400 group-hover:bg-purple-900 group-hover:text-white transition-all uppercase">${i.category}</span>
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="text-base md:text-xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">${i.title}</h4>
+                            <div class="font-mono text-[9px] text-gray-600 uppercase tracking-widest flex gap-4">
+                                <span>${i.venue}</span>
+                                <span class="text-purple-900">/</span>
+                                <span>${i.status}</span>
+                            </div>
+                        </div>
+                        <div class="hidden md:block toggle-icon transition-all duration-300">
+                            <span class="font-mono text-[10px] text-purple-500 tracking-[0.3em] view-text">VIEW_DETAILS ></span>
+                        </div>
+                    </div>
+                    <!-- 詳細エリア（初期は非表示） -->
+                    <div class="info-details font-mono text-xs text-gray-400">
+                        <div class="pt-8 pl-0 md:pl-[17rem] pr-4 grid gap-6">
+                            <p class="leading-relaxed text-gray-300">${i.details}</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/10 pt-4">
+                                <div><span class="text-purple-500 block mb-1">TIME</span>${i.time}</div>
+                                <div><span class="text-purple-500 block mb-1">PRICE</span>${i.price}</div>
+                                <div class="md:col-span-2"><span class="text-purple-500 block mb-1">ACCESS</span>${i.access}</div>
+                            </div>
+                            <div class="mt-2 p-4 bg-purple-900/10 border-l-2 border-purple-500">
+                                <span class="block text-[9px] text-purple-400 mb-2 tracking-widest">NAY'S NOTE:</span>
+                                <p class="architect-body text-white italic">"${i.comment}"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+
+        // アコーディオン切り替え関数
+        window.toggleInfo = function(element) {
+            const details = element.querySelector('.info-details');
+            const viewText = element.querySelector('.view-text');
+            const isActive = element.classList.contains('active');
+
+
+            // 他のすべての項目を閉じる（オプション）
+            document.querySelectorAll('.info-item').forEach(item => {
+                item.classList.remove('active');
+                item.querySelector('.info-details').style.maxHeight = null;
+                const txt = item.querySelector('.view-text');
+                if(txt) txt.textContent = 'VIEW_DETAILS >';
+            });
+
+
+            if (!isActive) {
+                element.classList.add('active');
+                details.style.maxHeight = details.scrollHeight + "px";
+                if(viewText) viewText.textContent = 'CLOSE ×';
+            }
+        };
+
+
+        window.addEventListener('scroll', () => { const nav = document.getElementById('nav'); nav.classList.toggle('bg-[#050505]/95', window.scrollY > 100); nav.classList.toggle('border-white/5', window.scrollY > 100); });
+    </script>
+</body>
+</html>
