@@ -160,37 +160,48 @@ const Collection = ({ onAddToCart }) => {
     const products = [
         {
             id: 1, series: '壱號系列', name: '特務短上着', price: 88000,
-            description: '高密度ヘビーナイロンを使用したショート丈ジャケット。18Kメッキボタンと、襟裏に施された極細の銀刺繍が静かな主張を持つ。',
-            colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }, { name: '鉄紺 (Midnight Navy)', hex: '#1e293b' }, { name: '煤灰 (Concrete Gray)', hex: '#4b5563' }],
+            description: '寅壱をベースに再設計した短ラン型ジャケット。高密度ヘビーナイロンまたはウールギャバジン。背面には「不夜城工廠」の銀刺繍、18K真鍮メッキボタン刻印入り。',
+            colors: [
+                { name: '墨黒 (Jet Black)', hex: '#111111' },
+                { name: '鉄紺 (Midnight Navy)', hex: '#1e293b' },
+                { name: '深緋 (Dark Burgundy)', hex: '#6b1a1a' },
+                { name: '煤灰 (Concrete Gray)', hex: '#4b5563' }
+            ],
             image: './%E7%89%B9%E5%8B%99%E5%A4%96%E5%A5%97_product_photo_202604021504.jpeg'
         },
         {
             id: 2, series: '壱號系列', name: '多袋式戦術ベスト', price: 54000,
-            description: 'バリスティックナイロン製の多機能ベスト。特定の嗜好品やピックを収納するための専用スリットを備え、現場での機動性を極限まで高める。',
-            colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }],
+            description: 'バリスティックナイロン製の多機能ベスト。七星・ガラムのカートンや、ピック・ライターを収める専用スリット設計。現場での機動性を極限まで高める。',
+            colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }, { name: '鉄紺 (Midnight Navy)', hex: '#1e293b' }],
             image: './%E3%81%93%E3%82%8C%E3%81%AE%E4%B8%8A%E4%B8%8B%E3%81%AE%E3%83%97%E3%83%AD%E3%83%80%E3%82%AF%E3%83%88%E3%83%95%E3%82%A9%E3%83%88%E3%82%92%E6%92%AE%E5%BD%B1%E3%81%97%E3%81%A6_202604021504.jpeg'
         },
         {
             id: 3, series: '弐號系列', name: '反射広軌・鳶袴', price: 42000,
-            description: '日本の伝統的なワークウェアを現代的に再構築。裾の絞り部分にブラックリフレクターを配置し、足元の境界線を鋭く浮かび上がらせる。',
+            description: '足元のエフェクター操作・アクセルワークを妨げない極端なテーパードシルエット。裾の絞りにブラックリフレクターを配置、夜間照射で境界線が発光。Tabi Bootsに最適化。',
             colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }, { name: '鉄紺 (Midnight Navy)', hex: '#1e293b' }],
             image: './%E3%81%93%E3%82%8C%E3%81%AE%E3%82%BB%E3%83%83%E3%83%88%E3%82%A2%E3%83%83%E3%83%97%E3%81%A7%E7%9D%80%E3%82%8C%E3%82%8B%E3%82%88%E3%81%86%E3%81%AB%E3%80%81%E3%82%B7%E3%82%A7%E3%83%95%E3%83%91%E3%83%B3%E3%83%84%E3%82%82%E7%94%A8%E6%84%8F_202604021504.jpeg'
         },
         {
-            id: 4, series: '参號系列', name: '極彩色・開襟シャツ', price: 68000,
-            description: '最高級シルク100%のオープンカラーシャツ。エンジン分解図を独自にパターン化したモノグラムが、重厚なドレープを生み出す。',
+            id: 4, series: '翠酔境界 / S.U.I', name: '極彩色・開襟シャツ', price: 68000,
+            description: '最高級シルク100%。薄いシルバー・ゴールドの線画で「雲・茨・桃」を総柄配置。肌に吸い付くドレープが、退廃的な佇まいを生む。',
             colors: [{ name: '冷徹銀 (Silver Line)', hex: '#e5e7eb' }, { name: '琥珀金 (Gold Line)', hex: '#d4af37' }],
             image: './%E6%A5%B5%E5%BD%A9%E8%89%B2%E3%83%BB%E9%96%8B%E8%A5%9F%E3%82%B7%E3%83%A3%E3%83%84_%E4%BF%A1%E5%8F%B7%E9%9B%B2%E7%B4%8B_202604021346.jpeg'
         },
         {
             id: 5, series: '装備品', name: '不夜城・結界バンダナ', price: 12000,
-            description: 'シルク素材のオリジナルバンダナ。緻密に計算されたパターンと、隅に施された箔押しが特徴。',
+            description: 'シルク製。口元を覆うカラーギャバンスタイル。隅に「期待は帯域圧迫するから切る」の箔押し入り。',
             colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }],
             image: './Girl_wearing_bandana_202604021403.jpeg'
         },
         {
-            id: 6, series: '装備品', name: '電氣武乱・重厚硝子器', price: 18000,
-            description: '重心を低く設計した専用ロックグラス。底面にはレーザー刻印が施されており、氷を沈めた際の音の反響まで計算されている。',
+            id: 6, series: '装備品', name: '我羅無・アルミシガレットケース', price: 24000,
+            description: 'ガラムの缶をオマージュした精密削り出しアルミケース。蓋の開閉音まで設計に含まれた、嗜好品のための工芸品。',
+            colors: [{ name: 'ガラム銀 (Garam Silver)', hex: '#9ca3af' }],
+            image: './%E4%B8%8D%E5%A4%9C%E5%9F%8E%E7%B5%90%E7%95%8C%E3%83%90%E3%83%B3%E3%83%80%E3%83%8A_%E6%88%91%E7%BE%85%E7%84%A1%E3%82%A2%E3%83%AB%E3%83%9F%E3%82%B7%E3%82%AC%E3%83%AC%E3%83%83%E3%83%88%E3%82%B1%E3%83%BC%E3%82%B9_202604021345.jpeg'
+        },
+        {
+            id: 7, series: '装備品', name: '電氣武乱・重厚硝子器', price: 18000,
+            description: '電氣ブラン専用設計の厚底ロックグラス。底面にレーザー刻印。重心を低く設計し、氷を沈めた際の音の反響まで計算されている。',
             colors: [{ name: '透明 (Clear)', hex: '#ffffff' }],
             image: './Electric_chaos_open_202604021406.jpeg'
         }
