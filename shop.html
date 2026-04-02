@@ -56,7 +56,7 @@ const Header = ({ cartCount, toggleCart }) => (
                     <h1 className="text-xl font-bold tracking-widest text-white uppercase">Sleepless City Factory</h1>
                 </div>
                 <div className="flex items-center space-x-6">
-                    <nav className="hidden md:flex space-x-6 text-xs tracking-wide text-gray-400">
+                    <nav className="hidden md:flex space-x-6 text-sm tracking-wide text-gray-400">
                         <a href="#concept" className="hover:text-white transition-colors">CONCEPT</a>
                         <a href="#collection" className="hover:text-white transition-colors">COLLECTION</a>
                         <a href="#lookbook" className="hover:text-white transition-colors">LOOKBOOK</a>
@@ -82,8 +82,8 @@ const Hero = () => (
         <div className="absolute inset-0 z-0 opacity-40">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#050505] z-10"></div>
             <img
-                src="https://images.unsplash.com/photo-1618365908648-e71bd5716cba?q=80&w=2070&auto=format&fit=crop"
-                alt="Industrial Background"
+                src="./image.png-3ec18611-f473-405a-8868-9490c44c7d9d"
+                alt="Hero Image"
                 className="w-full h-full object-cover grayscale"
             />
         </div>
@@ -162,37 +162,37 @@ const Collection = ({ onAddToCart }) => {
             id: 1, series: '壱號系列', name: '特務短上着', price: 88000,
             description: '高密度ヘビーナイロンを使用したショート丈ジャケット。18Kメッキボタンと、襟裏に施された極細の銀刺繍が静かな主張を持つ。',
             colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }, { name: '鉄紺 (Midnight Navy)', hex: '#1e293b' }, { name: '煤灰 (Concrete Gray)', hex: '#4b5563' }],
-            image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=2070&auto=format&fit=crop'
+            image: './image.png-3fd7a3d7-759d-4e0a-87c5-24cb137b636f'
         },
         {
             id: 2, series: '壱號系列', name: '多袋式戦術ベスト', price: 54000,
             description: 'バリスティックナイロン製の多機能ベスト。特定の嗜好品やピックを収納するための専用スリットを備え、現場での機動性を極限まで高める。',
             colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }],
-            image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=1936&auto=format&fit=crop'
+            image: './image.png-02654b64-7b13-483d-8c8c-9129e6568338'
         },
         {
             id: 3, series: '弐號系列', name: '反射広軌・鳶袴', price: 42000,
             description: '日本の伝統的なワークウェアを現代的に再構築。裾の絞り部分にブラックリフレクターを配置し、足元の境界線を鋭く浮かび上がらせる。',
             colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }, { name: '鉄紺 (Midnight Navy)', hex: '#1e293b' }],
-            image: 'https://images.unsplash.com/photo-1622470953794-aa9c70b0fb9d?q=80&w=1974&auto=format&fit=crop'
+            image: './image.png-ef2058a1-c803-47ae-a593-18830fd94194'
         },
         {
             id: 4, series: '参號系列', name: '極彩色・開襟シャツ', price: 68000,
             description: '最高級シルク100%のオープンカラーシャツ。エンジン分解図を独自にパターン化したモノグラムが、重厚なドレープを生み出す。',
             colors: [{ name: '冷徹銀 (Silver Line)', hex: '#e5e7eb' }, { name: '琥珀金 (Gold Line)', hex: '#d4af37' }],
-            image: 'https://images.unsplash.com/photo-1603252109303-2751441dd157?q=80&w=1974&auto=format&fit=crop'
+            image: './image.png-269f39f6-9253-4199-803d-bdade4615253'
         },
         {
             id: 5, series: '装備品', name: '不夜城・結界バンダナ', price: 12000,
             description: 'シルク素材のオリジナルバンダナ。緻密に計算されたパターンと、隅に施された箔押しが特徴。',
             colors: [{ name: '墨黒 (Jet Black)', hex: '#111111' }],
-            image: 'https://images.unsplash.com/photo-1614032130541-bbf255470ccf?q=80&w=1974&auto=format&fit=crop'
+            image: './image.png-c5f0bb60-b6c1-4a47-8646-0467fea4d740'
         },
         {
             id: 6, series: '装備品', name: '電氣武乱・重厚硝子器', price: 18000,
             description: '重心を低く設計した専用ロックグラス。底面にはレーザー刻印が施されており、氷を沈めた際の音の反響まで計算されている。',
             colors: [{ name: '透明 (Clear)', hex: '#ffffff' }],
-            image: 'https://images.unsplash.com/photo-1574621100236-d25b64dfbc07?q=80&w=2069&auto=format&fit=crop'
+            image: './image.png-33287f5b-61ed-4e08-90ea-7623d2bc4121'
         }
     ];
 
@@ -223,7 +223,7 @@ const Lookbook = () => (
             <div className="space-y-24">
                 <div className="flex flex-col md:flex-row items-center gap-12">
                     <div className="w-full md:w-1/2 aspect-[3/4] relative overflow-hidden bg-gray-900">
-                        <img src="https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=1974&auto=format&fit=crop" alt="Look 1" className="w-full h-full object-cover grayscale opacity-70" />
+                        <img src="./image.png-a152578d-ffb2-4688-9344-a0ec1a4ee12a" alt="Look 1" className="w-full h-full object-cover grayscale opacity-70" />
                     </div>
                     <div className="w-full md:w-1/2 space-y-6">
                         <span className="text-xs tracking-widest text-gray-500 uppercase">Look 01</span>
@@ -241,7 +241,7 @@ const Lookbook = () => (
                 </div>
                 <div className="flex flex-col md:flex-row-reverse items-center gap-12">
                     <div className="w-full md:w-1/2 aspect-[4/3] relative overflow-hidden bg-gray-900">
-                        <img src="https://images.unsplash.com/photo-1611365892505-19a9e32a2f4d?q=80&w=2070&auto=format&fit=crop" alt="Look 2" className="w-full h-full object-cover grayscale opacity-80" />
+                        <img src="./image.png-3a5f2f6c-6a64-470b-be5d-ea92bc7a0026" alt="Look 2" className="w-full h-full object-cover grayscale opacity-80" />
                     </div>
                     <div className="w-full md:w-1/2 space-y-6">
                         <span className="text-xs tracking-widest text-gray-500 uppercase">Look 02</span>
@@ -280,17 +280,19 @@ const Footer = () => (
 );
 
 /* ── Cart Modal ── */
-const CartModal = ({ isOpen, onClose, items, onRemove }) => {
+const CartModal = ({ isOpen, onClose, items }) => {
     if (!isOpen) return null;
     const total = items.reduce((sum, item) => sum + item.price, 0);
 
     return (
         <div className="fixed inset-0 z-[100] flex justify-end">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative w-full max-w-md bg-[#0a0a0a] border-l border-gray-800 h-full flex flex-col shadow-2xl">
+            <div className="relative w-full max-w-md bg-[#0a0a0a] border-l border-gray-800 h-full flex flex-col shadow-2xl transform transition-transform duration-300">
                 <div className="p-6 border-b border-gray-800 flex justify-between items-center">
                     <h2 className="text-xl tracking-widest text-white font-light uppercase">Pre-Order Bag</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white"><IconX /></button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white">
+                        <IconX className="h-6 w-6" />
+                    </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
                     {items.length === 0 ? (
@@ -307,13 +309,9 @@ const CartModal = ({ isOpen, onClose, items, onRemove }) => {
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
                                         <span className="text-xs text-gray-500 tracking-widest mb-1">{item.series}</span>
-                                        <h4 className="text-white text-sm tracking-wide mb-1">{item.name}</h4>
-                                        {item.selectedColor && <span className="text-xs text-gray-600 mb-2">{item.selectedColor.name}</span>}
+                                        <h4 className="text-white text-sm tracking-wide mb-2">{item.name}</h4>
                                         <span className="text-gray-400 font-mono text-sm">¥{item.price.toLocaleString()}</span>
                                     </div>
-                                    <button onClick={() => onRemove(index)} className="text-gray-700 hover:text-gray-400 self-start mt-1">
-                                        <IconX className="h-4 w-4" />
-                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -341,16 +339,12 @@ function App() {
     const [isCartOpen, setIsCartOpen] = useState(false);
 
     const addToCart = (product) => {
-        setCartItems(prev => [...prev, product]);
+        setCartItems([...cartItems, product]);
         setIsCartOpen(true);
     };
 
-    const removeFromCart = (index) => {
-        setCartItems(prev => prev.filter((_, i) => i !== index));
-    };
-
     return (
-        <div className="min-h-screen bg-[#050505] text-gray-300 selection:bg-white selection:text-black scroll-smooth">
+        <div className="min-h-screen bg-[#050505] text-gray-300 font-sans selection:bg-white selection:text-black scroll-smooth">
             <Header cartCount={cartItems.length} toggleCart={() => setIsCartOpen(true)} />
             <main>
                 <Hero />
@@ -362,7 +356,6 @@ function App() {
                 isOpen={isCartOpen}
                 onClose={() => setIsCartOpen(false)}
                 items={cartItems}
-                onRemove={removeFromCart}
             />
         </div>
     );
